@@ -1,8 +1,6 @@
 ## Set attributes
 #set( $attribs = $utils.dynamodb.toMapValues($context.arguments) )
-#set( $attribs.id = $utils.dynamodb.toString($context.identity.sub) )
 #set( $attribs.recordState =$utils.dynamodb.toString("ok") )
-#set( $attribs.isSuspended = { "BOOL" : false } )
 #set( $attribs.version = { "N" : 1 } )
 #set( $attribs.createdAt = $utils.dynamodb.toString($utils.time.nowISO8601() ) )
 #set( $attribs.updatedAt = $utils.dynamodb.toString($utils.time.nowISO8601() ) )
@@ -10,25 +8,17 @@
 #set( $profileImage = $ctx.args.input.profileImage )
 #set( $attribs.profileImage = $utils.dynamodb.toS3Object($profileImage.key, $profileImage.bucket, $profileImage.region) )
 
-#set( $coverImage = $ctx.args.input.coverImage )
-#set( $attribs.coverImage = $utils.dynamodb.toS3Object($coverImage.key, $coverImage.bucket, $coverImage.region) )
-#set( $attribs.addedFirstConnection = $utils.dynamodb.toBoolean(false) )
-#set( $attribs.addedSecondConnection= $utils.dynamodb.toBoolean(false) )
-#set( $attribs.createdFirstStorefrontProfile = $utils.dynamodb6.toBoolean(false) )
-
 {
   "version": "2017-02-28",
   "operation": "PutItem",
   "key": {
-    "userId": $utils.dynamodb.
-    toStringJson($context.identity.username)
+    "userId": $utils.dynamodb.toStringJson($context.identity.username)
   },
   "attributeValues": $utils.toJson($attribs),
   "condition": {
-    "expression": "attribute_not_exists(#userId) and attribute_not_exists(#id)",
+    "expression": "attribute_not_exists(#userId)",
     "expressionNames": {
-      "#userId": "userId",
-      "#id": "id"
+      "#userId": "userId"
     }
   }
 }

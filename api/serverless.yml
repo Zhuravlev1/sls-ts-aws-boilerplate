@@ -1,5 +1,5 @@
 service:
-  name: xxx-api # TODO: change xxx to your name
+  name: ${self:custom.serviceName}-api
   publish: false
 
 frameworkVersion: "=1.42.3"
@@ -11,7 +11,7 @@ provider:
   stage: ${opt:stage, 'temp'}
   region: "${file(../serverless.yml):provider.region}"
   deploymentBucket:
-    name: xxx-${self:provider.stage}-deploys # TODO: change xxx to your name
+    name: ${self:custom.serviceName}-${self:provider.stage}-deploys
     serverSideEncryption: AES256
 
 resources: ${file(resources/resources.yml)}
@@ -28,11 +28,12 @@ custom:
       prod: ERROR
       default: ALL
   name: "${self:service.name}-${self:provider.stage}"
-  nameU: "xxx_api_${self:provider.stage}" # TODO: change xxx to your name
-  datasourceServiceRoleName: "xxx-db-${self:provider.stage}-app-sync-service-role" # TODO: change xxx to your name
+  nameU: "${self:custom.serviceName}_api_${self:provider.stage}"
+  datasourceServiceRoleName: "${self:custom.serviceName}-db-${self:provider.stage}-app-sync-service-role"
   datasourceLambdaName: "${file(../serverless.yml):service.name}-${self:provider.stage}"
   # for some reason pseudo-parameter #{AWS::AccountId} does not work ${file(../serverless.yml):custom.name}
   accountId: "${file(../serverless.yml):custom.env.accountId.${self:provider.stage}, file(../serverless.yml):custom.env.accountId.default}"
+  serviceName: "${file(../serverless.yml):custom.serviceName}"
   appSync:
     name: "${self:custom.name}"
     authenticationType: AMAZON_COGNITO_USER_POOLS

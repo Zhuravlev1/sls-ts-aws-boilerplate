@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$1" = "build" ]]; then
+  docker build -t slsdeploy .
+else
+  docker run --name slsdeployrun --rm --env-file docker.env slsdeploy "$@"
+fi

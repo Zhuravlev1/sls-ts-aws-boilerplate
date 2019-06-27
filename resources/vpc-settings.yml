@@ -1,0 +1,18 @@
+default:
+  securityGroupIds:
+  subnetIds:
+prod:
+  securityGroupIds:
+    - Fn::GetAtt: [VPCStaticIP, DefaultSecurityGroup]
+  subnetIds:
+    - Ref: SubnetPrivate
+dev:
+  securityGroupIds:
+    - Fn::GetAtt: [VPCStaticIP, DefaultSecurityGroup]
+  subnetIds:
+    - Ref: SubnetPrivate
+stage:
+  securityGroupIds:
+    - Fn::GetAtt: [VPCStaticIP, DefaultSecurityGroup]
+  subnetIds:
+    - Ref: SubnetPrivate

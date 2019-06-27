@@ -1,0 +1,10 @@
+Outputs:
+  ApiGatewayBaseUrl:
+    Value:
+      Fn::Join:
+        - ""
+        - - "https://"
+          - Ref: "ApiGatewayRestApi"
+          - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
+    Export:
+      Name: "ApiGatewayBaseUrl-${self:custom.name}"

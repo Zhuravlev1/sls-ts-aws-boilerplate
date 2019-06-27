@@ -1,0 +1,29 @@
+Resources:
+  UserProfileImagesBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: Private
+      BucketName: ${self:custom.name}-user-profile-images
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - "*"
+            AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - DELETE
+              - HEAD
+            MaxAge: 3000
+            ExposedHeaders:
+              - "x-amz-server-side-encryption"
+              - "x-amz-request-id"
+              - "x-amz-id-2"
+
+Outputs:
+  UserProfileImagesBucketName:
+    Value:
+      Ref: UserProfileImagesBucket
+    Export:
+      Name: "UserProfileImagesBucket-${self:custom.name}"
+    Description: Bucket for user profile images upload

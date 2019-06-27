@@ -1,0 +1,27 @@
+Resources:
+  CloudWatchServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "${self:custom.name}-cloudwatch-logs-access-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "appsync.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "${self:custom.name}-cloudwatch-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # cloudwatch
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - "*"

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for var in "$@"
+do
+  echo "$var"
+  eval "node_modules/.bin/js-yaml -t $var > /dev/null"
+done

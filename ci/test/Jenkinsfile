@@ -1,0 +1,57 @@
+#!groovy​
+
+node {
+  def utils
+  // test stage is for automation testing
+  def envStage = 'test'
+  def credentials = [
+    string(credentialsId: 'jenkins-aws-secret-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+    string(credentialsId: 'jenkins-aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+  ]
+  def variables = [
+    'NODE_OPTIONS=--abort-on-uncaught-exception --max_old_space_size=3096'
+  ]
+
+  stage('Checkout') {
+    utils = load 'ci/utils.groovy'
+  }
+
+  def onError = { error ->
+    utils.sendToSlack("Test run <${env.BUILD_URL}|#${env.BUILD_NUMBER}> failed :pechal:")
+  }
+
+  utils.jobDecorator(credentials, variables, onError) {
+    stage('Dependencies') {
+      utils.bash('npm ci')
+    }
+
+    stage('Deploy API') {
+      utils.bash("npm run deploy:backend -- --stage=${envStage}")
+      utils.bash("npm run deploy:database -- --stage=${envStage}")
+      utils.bash("npm run deploy:api -- --stage=${envStage}")
+    }
+
+    stage('Execute tests') {
+      // get env params from stack outputs
+      def userPoolId = utils.bash("npx sls info -s ${envStage} --verbose | grep 'UserPoolId:' | cut -c13-")
+      def userPoolClientId = utils.bash("npx sls info -s ${envStage} --verbose | grep 'UserPoolClientId:' | cut -c19-")
+      def apiUrl = utils.bash("cd api; npx sls info -s ${envStage} --verbose | grep 'GraphQlApiUrl:' | cut -c16-")
+      def tableName = utils.bash("cd database; npx sls info -s ${envStage} --verbose | grep 'UserProfilesTableName:' | cut -c24-")
+
+      // execute tests
+      withEnv([
+        "AWS_REGION=us-east-1",
+        "GRAPHQL_ENDPOINT=${apiUrl}",
+        "USER_PROFILES_TABLE=${tableName}",
+        "COGNITO_USER_POOL_ID=${userPoolId}",
+        "COGNITO_CLIENT_ID=${userPoolClientId}",
+        "COGNITO_AUTHENTICATION_TYPE=AMAZON_COGNITO_USER_POOLS",
+
+        "COGNITO_USERNAME=+380111111111",
+        "COGNITO_PASSWORD=xxxxxx",
+      ]) {
+        utils.bash("npm run test:api")
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+service:
+  name: xxx-backend # TODO: change xxx to your name
+  publish: false
+
+frameworkVersion: "=1.42.3"
+
+# The `provider` block defines where your service will be deployed
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${opt:stage, 'temp'}
+  region: us-east-1
+  memorySize: ${self:custom.env.lambdaMemorySize.${self:provider.stage}, self:custom.env.lambdaMemorySize.default} # optional, in MB, default is 1024
+  timeout: ${self:custom.env.lambdaTimeout.${self:provider.stage}, self:custom.env.lambdaTimeout.default} # optional, in seconds, default is 6
+  versionFunctions: false # optional, default is true
+  logRetentionInDays: 14 # Set the default RetentionInDays for a CloudWatch LogGroup
+  deploymentBucket:
+    name: xxx-${self:provider.stage}-deploys # TODO: change xxx to your name
+    serverSideEncryption: AES256
+  environment:
+    BASE_URL:
+      Fn::Join:
+        - ""
+        - - "https://"
+          - Ref: "ApiGatewayRestApi"
+          - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
+  apiGateway:
+    binaryMediaTypes:
+      - "*/*"
+
+package:
+  individually: true
+  excludeDevDependencies: true
+
+functions: ${file(resources/lambda-functions.yml)}
+
+# Create resources with separate CloudFormation templates
+resources: ${file(resources/resources.yml)}
+
+plugins:
+  - serverless-deployment-bucket
+  - serverless-webpack
+  - serverless-pseudo-parameters
+  - serverless-plugin-aws-alerts
+
+custom:
+  alerts: ${file(resources/cloud-watch-alarm.yml)}
+  env:
+    lambdaMemorySize:
+      dev: 256
+      stage: 256
+      prod: 512
+      default: 128
+    lambdaTimeout:
+      dev: 6
+      stage: 6
+      prod: 8
+      default: 4
+    accountId:
+      prod: xxxxxxxxxxxxx # TODO: change xxx to your value
+      default: xxxxxxxxxxxxx # TODO: change xxx to your value
+  region: "${self:provider.region}"
+  accountId: ${self:custom.env.accountId.${self:provider.stage}, self:custom.env.accountId.default}
+  name: "${self:service.name}-${self:provider.stage}"
+  nameU: "xxx_backend_${self:provider.stage}" # TODO: change xxx to your name
+  # serverless-webpack plugin config
+  webpack:
+    packagerOptions:
+      scripts:
+        - npm rebuild sharp --target=8.10.0 --target_arch=x64 --target_platform=linux
+    includeModules:
+      forceInclude:
+        - source-map-support
+      forceExclude:
+        - aws-sdk

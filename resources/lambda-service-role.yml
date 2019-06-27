@@ -1,0 +1,59 @@
+Resources:
+  LambdaServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "${self:custom.name}-lambda-services-access-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "${self:custom.name}-lambda-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "dynamodb:Query"
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchWriteItem"
+                  - "dynamodb:GetItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:Scan"
+                  - "dynamodb:UpdateItem"
+                  - "logs:*"
+                  - "cloudformation:*"
+                Resource:
+                  - "*"
+              - Effect: "Allow"
+                Action:
+                  - "s3:GetObject"
+                Resource:
+                  - {
+                      "Fn::Join":
+                        [
+                          "",
+                          [
+                            "arn:aws:s3:::",
+                            { "Ref": "UserProfileImagesBucket" },
+                            "/*",
+                          ],
+                        ],
+                    }
+              - Effect: Allow
+                Action:
+                  - es:ESHttpPost
+                Resource:
+                  - arn:aws:es:*:*:*
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                Resource: "*"

@@ -1,0 +1,48 @@
+Resources:
+  UsersTableStream:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: ${self:custom.lambdaBatchSize}
+      Enabled: True
+      EventSourceArn:
+        Fn::GetAtt: [UserProfilesTable, StreamArn]
+      FunctionName:
+        Fn::GetAtt: [UsersStreamHandlerLambdaFunction, Arn]
+      StartingPosition: LATEST
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow #allow lambda to assume this role
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: LambdaRolePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow #allow to write logs to cloudwatch
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow #allow lambda to read from the event stream
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:BatchWriteItem
+                Resource: "*"

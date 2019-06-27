@@ -1,0 +1,27 @@
+Resources:
+  DynamoDBAutoscaleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "${self:custom.name}-dynamodb-autoscale-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "application-autoscaling.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "${self:custom.name}-dynamodb-autoscale-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeTable
+                  - dynamodb:UpdateTable
+                  - cloudwatch:PutMetricAlarm
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:DeleteAlarms
+                  - cloudwatch:GetMetricStatistics
+                  - cloudwatch:SetAlarmState
+                Resource: "*"

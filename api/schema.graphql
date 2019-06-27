@@ -1,0 +1,40 @@
+input S3FileInput {
+  bucket: String!
+  region: String!
+  key: String!
+}
+
+type UserProfile {
+  name: String!
+  city: String!
+  about: String!
+  street: String!
+  userId: ID!
+  version: Int!
+  profileImage: AWSURL!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type UserProfileConnection {
+  totalCount: Int
+  items: [UserProfile]!
+  nextToken: String
+}
+
+type Query {
+  # Get a single user profile by user id
+  getUserProfile(userId: ID!): UserProfile!
+  # Get list users
+  listUserProfiles(limit: Int = 25): UserProfileConnection!
+}
+
+type Mutation {
+  createUserProfile(
+    name: String!
+    city: String!
+    about: String!
+    street: String!
+    profileImage: S3FileInput!
+  ): UserProfile!
+}

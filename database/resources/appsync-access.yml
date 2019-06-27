@@ -1,0 +1,44 @@
+Resources:
+  AppSyncDynamoDBServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "${self:custom.name}-app-sync-service-role"
+      # RoleName: "${self:custom.name}-${${file(../api/serverless.yml):custom.appSync.serviceRole}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "appsync.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - # PolicyName: "${self:custom.name}-${${file(../api/serverless.yml):custom.appSync.serviceRole}-policy"
+          PolicyName: "${self:custom.name}-app-sync-service-role-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "dynamodb:Query"
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchWriteItem"
+                  - "dynamodb:GetItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:Scan"
+                  - "dynamodb:UpdateItem"
+                Resource:
+                  - "arn:aws:dynamodb:${self:custom.region}:${self:custom.accountId}:table/${self:custom.name}-user-profiles"
+                  - "arn:aws:dynamodb:${self:custom.region}:${self:custom.accountId}:table/${self:custom.name}-user-profiles/*"
+              # Role for appsync lambda resolver
+#              - Effect: "Allow"
+#                Action:
+#                  - "lambda:InvokeFunction"
+#                  - "dynamodb:DescribeStream"
+#                  - "dynamodb:GetRecords"
+#                  - "dynamodb:GetShardIterator"
+#                  - "dynamodb:ListStreams"
+#                Resource:
+#                  - "arn:aws:lambda:${self:custom.region}:${self:custom.accountId}:function:${self:custom.lambdaName}-lambdaName"

@@ -1,0 +1,6 @@
+- type: AMAZON_DYNAMODB
+  name: "${self:custom.nameU}_user_profiles"
+  description: "User can have a profile"
+  config:
+    tableName: "xxx-db-${self:provider.stage}-user-profiles" # TODO: change xxx to your name
+    serviceRoleArn: "arn:aws:iam::${self:custom.accountId}:role/${self:custom.datasourceServiceRoleName}"

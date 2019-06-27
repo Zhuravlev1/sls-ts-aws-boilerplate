@@ -1,0 +1,11 @@
+.git
+.idea
+.serverless
+
+node_modules
+.nyc_output
+coverage
+
+
+api/tests
+tests

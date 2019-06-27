@@ -1,0 +1,11 @@
+# User profiles
+- dataSource: "${self:custom.nameU}_user_profiles"
+  type: Mutation
+  field: createUserProfile
+  request: "user-profile/createUserProfile.request.json.vm"
+  response: "user-profile/createUserProfile.response.json.vm"
+- dataSource: "${self:custom.nameU}_user_profiles"
+  field: getUserProfile
+  type: Query
+  request: "user-profile/getUserProfile.request.json.vm"
+  response: "user-profile/getUserProfile.response.json.vm"

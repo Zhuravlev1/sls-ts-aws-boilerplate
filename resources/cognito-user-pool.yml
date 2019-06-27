@@ -1,0 +1,192 @@
+Resources:
+  # Creates a role that allows Cognito to send SNS messages
+  SNSRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "cognito-idp.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "CognitoSNSPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "sns:publish"
+                Resource: "*"
+
+  # Creates the main user pool
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    Properties:
+      # Generate a name based on the stage
+      UserPoolName: "${self:custom.name}-user-pool"
+      # Set phnoe as an alias
+      UsernameAttributes:
+        - phone_number
+      AutoVerifiedAttributes:
+        - phone_number
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+      MfaConfiguration: "OFF"
+      SmsAuthenticationMessage: "Sign up. Your authentication code is {####}"
+      SmsVerificationMessage: "Sign in. Your verification code is {####}"
+      SmsConfiguration:
+        ExternalId: ${self:custom.name}-user-pool-external
+        SnsCallerArn:
+          Fn::GetAtt: SNSRole.Arn
+      Schema:
+        - Name: phone_number
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      # Generate an app client name based on the stage
+      ClientName: ${self:custom.name}-user-pool-client
+      UserPoolId:
+        Ref: UserPool
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+      GenerateSecret: false
+
+  IdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      IdentityPoolName: ${self:custom.nameU}_pool_identity
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders:
+        - ClientId:
+            Ref: UserPoolClient
+          ProviderName:
+            Fn::GetAtt: UserPool.ProviderName
+
+  # Create a role for unauthorized access to AWS resources.
+  # Very limited access. Only allows users in the previously created Identity Pool
+  CognitoUnAuthorizedRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud":
+                  Ref: IdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": unauthenticated
+      Policies:
+        - PolicyName: "${self:custom.name}-cognito-unauthorized-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "cognito-sync:*"
+                Resource: "*"
+
+  # Create a role for authorized access to AWS resources. Control what your user can access.
+  # This example only allows Lambda invocation
+  # Only allows users in the previously created Identity Pool
+  CognitoAuthorizedRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: "cognito-identity.amazonaws.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud":
+                  Ref: IdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": authenticated
+      Policies:
+        - PolicyName: "${self:custom.name}-cognito-authorized-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                # https://docs.aws.amazon.com/cognito/latest/developerguide/resource-permissions.html
+                Action:
+                  - "cognito-sync:*"
+                  - "cognito-identity:*"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "s3:PutObject"
+                # Had to use Fn::Join in order to skip conflicts between serverless variables and ${cognito-identity...} which is processed by AWS
+                Resource:
+                  - {
+                      "Fn::Join":
+                        [
+                          "",
+                          [
+                            "arn:aws:s3:::",
+                            { "Ref": "UserProfileImagesBucket" },
+                            "/${cognito-identity.",
+                            "amazonaws.com:sub}",
+                          ],
+                        ],
+                    }
+                  - {
+                      "Fn::Join":
+                        [
+                          "",
+                          [
+                            "arn:aws:s3:::",
+                            { "Ref": "UserProfileImagesBucket" },
+                            "/${cognito-identity.",
+                            "amazonaws.com:sub}/*",
+                          ],
+                        ],
+                    }
+
+  # Assigns the roles to the Identity Pool
+  IdentityPoolRoleMapping:
+    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+    Properties:
+      IdentityPoolId:
+        Ref: IdentityPool
+      Roles:
+        authenticated:
+          Fn::GetAtt: CognitoAuthorizedRole.Arn
+        unauthenticated:
+          Fn::GetAtt: CognitoUnAuthorizedRole.Arn
+
+# Print out the Id of the User Pool that is created
+Outputs:
+  UserPoolId:
+    Value:
+      Ref: UserPool
+    Export:
+      Name: "UserPoolId-${self:custom.name}"
+  UserPoolClientId:
+    Value:
+      Ref: UserPoolClient
+    Export:
+      Name: "UserPoolClientId-${self:custom.name}"
+  IdentityPoolId:
+    Value:
+      Ref: IdentityPool
+    Export:
+      Name: "IdentityPoolId-${self:custom.name}"

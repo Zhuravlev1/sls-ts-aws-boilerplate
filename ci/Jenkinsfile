@@ -1,0 +1,57 @@
+#!groovy​
+
+node {
+  def utils = load 'ci/utils.groovy'
+  def status = 'success'
+  def name = 'Name'
+
+  // TODO use utils.setState
+  updateGitlabCommitStatus(name: name, state: 'pending')
+
+  try {
+    stage('Checkout') {
+      updateGitlabCommitStatus(name: name, state: 'running')
+      checkout scm
+    }
+
+    utils = load 'ci/utils.groovy'
+
+    stage('Dependencies') {
+      utils.bash('npm install --loglevel=error --prefer-offline')
+    }
+
+    stage('Validate schema') {
+      utils.bash('npm run lint-schema')
+    }
+
+    stage('Validate yaml') {
+      utils.bash('npm run lint-yaml')
+    }
+
+    stage('Validate velocity') {
+      utils.bash('npm run check-velocity')
+    }
+
+    stage('Tslint') {
+      utils.bash('npm run lint')
+    }
+
+    stage('TS type check') {
+      utils.bash('npm run check-types')
+    }
+
+    stage('Unit test') {
+      utils.bash('npm run test')
+    }
+
+    // TODO validate commit messages and merge request title
+
+  } catch (Exception e) {
+    status = 'failed'
+    comment = "Caught: ${e}"
+    addGitLabMRComment(comment: comment)
+    echo comment
+  } finally {
+    updateGitlabCommitStatus(name: name, state: status)
+  }
+}

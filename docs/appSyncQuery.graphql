@@ -1,0 +1,48 @@
+### Graphql queries
+
+### user profile ###
+
+mutation createUserProfile {
+  createUserProfile(
+    name: "John Snow"
+    street: "1s avenue"
+    city: "New York"
+    about: "Please check my shop"
+    profileImage: {
+      bucket: "backend-local-user-cover-images"
+      region: "bar"
+      key: "7e1164e5-00d1-40e3-9d35-9ea4a56fdc2a/7baed6e6-e34a-45b2-8c66-1dc17b4a784a"
+    }
+  ) {
+    userId
+    name
+    street
+    city
+    about
+    profileImage
+  }
+}
+
+query getUserProfile {
+  getUserProfile(userId: "0810f9e4-7ac4-473e-abd5-203196f72da3") {
+    userId
+    name
+    createdAt
+  }
+}
+
+query listUserProfiles {
+  listUserProfiles {
+    totalCount
+    items {
+      userId
+      createdAt
+      name
+      street
+      city
+      about
+      profileImage
+    }
+    nextToken
+  }
+}

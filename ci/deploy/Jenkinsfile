@@ -1,0 +1,85 @@
+#!groovy​
+
+node {
+  def utils
+  def envStage = env.environment
+
+  def credentials = envStage == 'prod' ? [
+    string(credentialsId: 'jenkins-aws-secret-key-id-prod', variable: 'AWS_ACCESS_KEY_ID'),
+    string(credentialsId: 'jenkins-aws-secret-access-key-prod', variable: 'AWS_SECRET_ACCESS_KEY'),
+  ] : [
+    string(credentialsId: 'jenkins-aws-secret-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+    string(credentialsId: 'jenkins-aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+  ]
+
+  def variables = [
+    'NODE_OPTIONS=--abort-on-uncaught-exception --max_old_space_size=3072'
+  ]
+
+  stage('Checkout') {
+    checkout scm
+    // load utils after checkout
+    utils = load 'ci/utils.groovy'
+  }
+
+  // set error lambda after utils are loaded
+  def onError = { error ->
+    utils.sendToSlack("Deployment <${env.BUILD_URL}|#${env.BUILD_NUMBER}> to *${envStage}* failed :hankey:")
+  }
+
+  utils.jobDecorator(credentials, variables, onError) {
+
+    stage('Dependencies') {
+      utils.bash('npm ci')
+    }
+
+    stage('Validate') {
+      parallel 'schema': {
+          utils.bash('npm run lint-schema')
+        },
+        'yaml': {
+          utils.bash('npm run lint-yaml')
+        },
+        'velocity': {
+          utils.bash('npm run check-velocity')
+        },
+        'tslint': {
+          utils.bash('npm run lint')
+        },
+        'typings': {
+          utils.bash('npm run check-types')
+        }
+    }
+
+    stage('Unit test') {
+      utils.bash('npm run test')
+    }
+
+    stage('Build Backend') {
+      utils.bash("npm run build:backend -- --stage=${envStage}")
+    }
+
+    stage('Build Database') {
+      utils.bash("npm run build:database -- --stage=${envStage}")
+    }
+
+    stage('Build API') {
+      utils.bash("npm run build:api -- --stage=${envStage}")
+    }
+
+    stage('Deploy API') {
+      utils.sendToSlack("Deployment <${env.BUILD_URL}|#${env.BUILD_NUMBER}> to *${envStage}* env from branch *${env.BRANCH}* started")
+
+      utils.bash("npm run deploy:backend -- --package .serverless --stage=${envStage}")
+      utils.bash("npm run deploy:database -- --package .serverless --stage=${envStage}")
+      utils.bash("npm run deploy:api -- --package .serverless --stage=${envStage}")
+    }
+
+    stage('Start Api tests') {
+      if(envStage == 'dev') {
+        build job: './run-api-test', propagate: false, wait: false,
+          parameters: [string(name: 'BRANCH', value: env.BRANCH)]
+      }
+    }
+  }
+}

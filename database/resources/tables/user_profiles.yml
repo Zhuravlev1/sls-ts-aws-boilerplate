@@ -1,0 +1,147 @@
+Resources:
+  UserProfilesTable:
+    Type: "AWS::DynamoDB::Table"
+    # DeletionPolicy: Retain
+    Properties:
+      TableName: "${self:custom.name}-user-profiles"
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: recordState
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: recordStateIndex
+          KeySchema:
+            - AttributeName: recordState
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: ${self:custom.env.ReadCapacityUnits.${self:provider.stage}, self:custom.env.ReadCapacityUnits.default}
+            WriteCapacityUnits: ${self:custom.env.WriteCapacityUnits.${self:provider.stage}, self:custom.env.WriteCapacityUnits.default}
+      ProvisionedThroughput:
+        ReadCapacityUnits: ${self:custom.env.ReadCapacityUnits.${self:provider.stage}, self:custom.env.ReadCapacityUnits.default}
+        WriteCapacityUnits: ${self:custom.env.WriteCapacityUnits.${self:provider.stage}, self:custom.env.WriteCapacityUnits.default}
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  # Scale read capacity
+  UserProfilesTableReadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: UserProfilesTable
+    Properties:
+      MaxCapacity: ${self:custom.env.ReadCapacityMaxUnits.${self:provider.stage}, self:custom.env.ReadCapacityMaxUnits.default}
+      MinCapacity: ${self:custom.env.ReadCapacityUnits.${self:provider.stage}, self:custom.env.ReadCapacityUnits.default}
+      ResourceId: table/${self:custom.name}-user-profiles # The resource type is table and the unique identifier is the resource ID
+      RoleARN: { Fn::GetAtt: [DynamoDBAutoscaleRole, Arn] }
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  UserProfilesTableReadScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: UserProfilesTableReadTarget
+    Properties:
+      PolicyName: ${self:custom.name}-user-profiles-read-scaling-policy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId:
+        Ref: UserProfilesTableReadTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+  # Scale write capacity
+  UserProfilesTableWriteTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: UserProfilesTable
+    Properties:
+      MaxCapacity: ${self:custom.env.WriteCapacityMaxUnits.${self:provider.stage}, self:custom.env.WriteCapacityMaxUnits.default}
+      MinCapacity: ${self:custom.env.WriteCapacityUnits.${self:provider.stage}, self:custom.env.WriteCapacityUnits.default}
+      ResourceId: table/${self:custom.name}-user-profiles # table/{table_name}
+      RoleARN: { Fn::GetAtt: [DynamoDBAutoscaleRole, Arn] }
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  UserProfilesTableWriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: UserProfilesTableWriteTarget
+    Properties:
+      PolicyName: ${self:custom.name}-user-profiles-write-scaling-policy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId:
+        Ref: UserProfilesTableWriteTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+  # recordState index scale read capacity
+  UserProfilesTableIndexRecordStateReadTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: UserProfilesTable
+    Properties:
+      MaxCapacity: ${self:custom.env.ReadCapacityMaxUnits.${self:provider.stage}, self:custom.env.ReadCapacityMaxUnits.default}
+      MinCapacity: ${self:custom.env.ReadCapacityUnits.${self:provider.stage}, self:custom.env.ReadCapacityUnits.default}
+      ResourceId: table/${self:custom.name}-user-profiles/index/recordStateIndex # table/{table_name}/index/{index_name}
+      RoleARN: { Fn::GetAtt: [DynamoDBAutoscaleRole, Arn] }
+      ScalableDimension: dynamodb:index:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  UserProfilesTableRecordStateReadScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: UserProfilesTableIndexRecordStateReadTarget
+    Properties:
+      PolicyName: ${self:custom.name}-user-profiles-index-recordStateIndex-read-scaling-policy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId:
+        Ref: UserProfilesTableIndexRecordStateReadTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+  # recordState index scale write capacity
+  UserProfilesTableIndexRecordStateWriteTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: UserProfilesTable
+    Properties:
+      MaxCapacity: ${self:custom.env.WriteCapacityMaxUnits.${self:provider.stage}, self:custom.env.WriteCapacityMaxUnits.default}
+      MinCapacity: ${self:custom.env.WriteCapacityUnits.${self:provider.stage}, self:custom.env.WriteCapacityUnits.default}
+      ResourceId: table/${self:custom.name}-user-profiles/index/recordStateIndex # table/{table_name}/index/{index_name}
+      RoleARN: { Fn::GetAtt: [DynamoDBAutoscaleRole, Arn] }
+      ScalableDimension: dynamodb:index:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  UserProfilesTableRecordStateWriteScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: UserProfilesTableIndexRecordStateWriteTarget
+    Properties:
+      PolicyName: ${self:custom.name}-user-profiles-index-recordStateIndex-write-scaling-policy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId:
+        Ref: UserProfilesTableIndexRecordStateWriteTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+# Export table name
+Outputs:
+  UserProfilesTableName:
+    Description: Name of the DynamoDB table
+    Value:
+      Ref: UserProfilesTable
+    Export:
+      Name: "UserProfilesTableName-${self:custom.name}"
+  UserProfilesTableStreamArn:
+    Description: ARN of the DynamoDB table
+    Value:
+      Fn::GetAtt: [UserProfilesTable, StreamArn]
+    Export:
+      Name: "UserProfilesTableStreamArn-${self:custom.name}"

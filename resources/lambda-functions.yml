@@ -1,0 +1,9 @@
+status:
+  handler: src/handler.status
+  events:
+    - http:
+        path: status
+        method: get
+  environment:
+    REGION: "${self:provider.region}"
+  vpc: "${file(./resources/vpc-settings.yml):${self:provider.stage}, file(./resources/vpc-settings.yml):default }"

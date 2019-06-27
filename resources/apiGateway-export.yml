@@ -1,0 +1,9 @@
+Outputs:
+  ApiGateway:
+    Value:
+      Fn::Join:
+        - ""
+        - - Ref: "ApiGatewayRestApi"
+          - ".execute-api.${self:provider.region}.amazonaws.com"
+    Export:
+      Name: "ApiGateway-${self:custom.name}"

@@ -1,15 +1,6 @@
-# add role to lambda for work with db
+# add role to lambda
 - ${file(resources/lambda-service-role.yml)}
-
-# Cognito
-- ${file(resources/cognito-user-pool.yml)}
-
-# Buckets
-- ${file(resources/user-profile-images-bucket.yml)}
 
 # Export api gateway base url
 - ${file(resources/base-url-export.yml)}
 - ${file(resources/apiGateway-export.yml)}
-
-# Static IP address
-- ${file(resources/static-IP.yml)}

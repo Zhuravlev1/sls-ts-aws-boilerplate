@@ -10,8 +10,6 @@ Before deployment the following ENV variables have to be configured:
 
 ```bash
 npm run deploy:backend -- -s dev
-npm run deploy:database -- -s dev
-npm run deploy:api -- -s dev
 ```
 
 Get deployment info including keys
@@ -39,12 +37,6 @@ How to run API and unit tests
 * Use `npm run test:api` to run the API test
 * Use `npm test` to run the unit tests
 
-## Description
-
-* Root directory - auth and api gateway configuration
-* /database - dynamodb config (to be deployed separately)
-* /api - appsync config (to be deployed separately)
-
 ## Deploy with Docker
 
 Before deployment update credentials in docker.env
@@ -54,7 +46,7 @@ bin/dckr build
 # deploy stack
 bin/dckr npm run deploy:backend -- -s stageName
 # deploy a single function
-bin/dckr sls deploy function -f resizer --stage stageName --region us-east-1
+bin/dckr sls deploy function -f funcName --stage stageName --region us-east-1
 ```
 
 ## Package.json scripts
@@ -69,5 +61,3 @@ bin/dckr sls deploy function -f resizer --stage stageName --region us-east-1
 * `lint-schema` — check graphql schema
 * `lint-yaml` — validate yaml syntax
 * `deploy:backend` — deploy xxx-backend: configures Gateway and Cognito
-* `deploy:database` — deploy xxx-db stack: configures Dynamodb
-* `deploy:api` — deploy xxx-api stack: setup Appsync

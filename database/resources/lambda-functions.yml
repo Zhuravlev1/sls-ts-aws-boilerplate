@@ -1,5 +1,0 @@
-usersStreamHandler:
-  handler: src/usersStreamHandler.handle
-  desctiption: Process users table event stream
-  role:
-    Fn::GetAtt: [LambdaRole, Arn]

@@ -1,4 +1,0 @@
-# It is kept here only for graphql schema linter
-# These scalars are already defined in the Appsync
-scalar AWSURL
-scalar AWSDateTime

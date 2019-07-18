@@ -18,11 +18,7 @@
     "lint-yaml": "find . -name '*.yml' -a ! -path './node_modules/*' | xargs bin/lint-yaml",
     "lint-commit": "commitlint -e",
     "deploy:backend": "serverless deploy",
-    "deploy:database": "cd database; serverless deploy",
-    "deploy:api": "cd api; serverless deploy",
-    "build:backend": "serverless package",
-    "build:database": "cd database; serverless package",
-    "build:api": "cd api; serverless package"
+    "build:backend": "serverless package"
   },
   "dependencies": {
     "@aws/dynamodb-query-iterator": "0.7.1",

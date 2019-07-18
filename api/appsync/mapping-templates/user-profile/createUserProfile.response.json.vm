@@ -1,5 +1,0 @@
-#set( $response = $context.result )
-
-#set( $response.profileImage = "${baseUrl}" + $context.result.profileImage.bucket + "/" +  $context.result.profileImage.key)
-
-$utils.toJson($response)

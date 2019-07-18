@@ -17,35 +17,6 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: "Allow"
-                Action:
-                  - "dynamodb:Query"
-                  - "dynamodb:BatchGetItem"
-                  - "dynamodb:BatchWriteItem"
-                  - "dynamodb:GetItem"
-                  - "dynamodb:DeleteItem"
-                  - "dynamodb:PutItem"
-                  - "dynamodb:Scan"
-                  - "dynamodb:UpdateItem"
-                  - "logs:*"
-                  - "cloudformation:*"
-                Resource:
-                  - "*"
-              - Effect: "Allow"
-                Action:
-                  - "s3:GetObject"
-                Resource:
-                  - {
-                      "Fn::Join":
-                        [
-                          "",
-                          [
-                            "arn:aws:s3:::",
-                            { "Ref": "UserProfileImagesBucket" },
-                            "/*",
-                          ],
-                        ],
-                    }
               - Effect: Allow
                 Action:
                   - es:ESHttpPost

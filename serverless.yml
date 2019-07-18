@@ -44,7 +44,6 @@ plugins:
   - serverless-plugin-aws-alerts
 
 custom:
-  alerts: ${file(resources/cloud-watch-alarm.yml)}
   env:
     lambdaMemorySize:
       dev: 256

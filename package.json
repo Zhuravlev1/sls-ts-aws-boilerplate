@@ -60,7 +60,7 @@
     "jest": "24.7.1",
     "jest-cli": "24.7.1",
     "jest-json-schema": "2.0.2",
-    "js-yaml": "3.13.0",
+    "js-yaml": "3.13.1",
     "lint-staged": "8.1.5",
     "node-fetch": "2.2.0",
     "nyc": "13.3.0",

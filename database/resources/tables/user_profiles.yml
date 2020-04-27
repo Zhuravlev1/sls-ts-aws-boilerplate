@@ -23,12 +23,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: ${self:custom.env.ReadCapacityUnits.${self:provider.stage}, self:custom.env.ReadCapacityUnits.default}
-            WriteCapacityUnits: ${self:custom.env.WriteCapacityUnits.${self:provider.stage}, self:custom.env.WriteCapacityUnits.default}
-      ProvisionedThroughput:
-        ReadCapacityUnits: ${self:custom.env.ReadCapacityUnits.${self:provider.stage}, self:custom.env.ReadCapacityUnits.default}
-        WriteCapacityUnits: ${self:custom.env.WriteCapacityUnits.${self:provider.stage}, self:custom.env.WriteCapacityUnits.default}
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       BillingMode: PAY_PER_REQUEST

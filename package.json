@@ -49,7 +49,7 @@
     "amazon-cognito-identity-js": "4.2.2",
     "aws-appsync": "3.0.3",
     "aws-lambda": "1.0.5",
-    "aws-sdk": "2.648.0",
+    "aws-sdk": "2.814.0",
     "aws-sdk-mock": "5.1.0",
     "faker": "4.1.0",
     "forwarded": "0.1.2",

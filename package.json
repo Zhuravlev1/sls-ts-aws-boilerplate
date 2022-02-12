@@ -44,7 +44,7 @@
     "@types/lodash": "^4.14.116",
     "@types/node": "10.3.5",
     "@types/node-fetch": "2.1.2",
-    "ajv": "6.5.4",
+    "ajv": "6.12.3",
     "dotenv": "8.0.0",
     "amazon-cognito-identity-js": "4.2.2",
     "aws-appsync": "3.0.3",

@@ -62,7 +62,7 @@
     "jest-json-schema": "2.0.2",
     "js-yaml": "3.13.0",
     "lint-staged": "8.1.5",
-    "node-fetch": "2.2.0",
+    "node-fetch": "2.6.7",
     "nyc": "13.3.0",
     "parse-json": "4.0.0",
     "prettier": "1.17.0",
